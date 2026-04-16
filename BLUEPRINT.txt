@@ -1,0 +1,74 @@
+satellite-ground-station/
+│
+├── .github/                            # Automated CI/CD pipelines
+│   └── workflows/
+│       ├── build-go.yml                # Tests and builds the Go ingestion binary
+│       ├── build-python.yml            # Lints and builds the FastAPI container
+│       └── build-react.yml             # Builds the React static assets for deployment
+│
+├── ingestion/                          # Go: High-throughput hardware/telemetry ingestion
+│   ├── cmd/
+│   │   └── server/
+│   │       └── main.go                 # Entry point: Initializes UDP/TCP listeners and Redis client
+│   ├── internal/                       # Private, decoupled application logic
+│   │   ├── decoder/
+│   │   │   ├── ax25.go                 # Strips protocol headers and extracts payloads
+│   │   │   └── csp.go                  # Translates binary flags into readable telemetry states
+│   │   ├── network/
+│   │   │   └── listener.go             # Manages network sockets for radio hardware outputs
+│   │   └── publisher/
+│   │       └── redis.go                # Pushes parsed JSON structs to a Redis Pub/Sub channel
+│   ├── go.mod                          # Go module dependencies
+│   ├── go.sum                          # Go dependency checksums
+│   └── Dockerfile                      # Multi-stage build for a minimal scratch-based Go binary
+│
+├── backend/                            # FastAPI: API, WebSocket routing, and business logic
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── routes/
+│   │   │   │   ├── websockets.py       # Subscribes to Redis and streams live packets to frontend
+│   │   │   │   └── historical.py       # Exposes REST endpoints to query past telemetry data
+│   │   │   └── dependencies.py         # FastAPI dependency injection (e.g., DB sessions)
+│   │   ├── core/
+│   │   │   └── config.py               # Pydantic BaseSettings for environment variables
+│   │   ├── models/
+│   │   │   └── telemetry.py            # SQLAlchemy models mapping to TimescaleDB
+│   │   ├── schemas/
+│   │   │   └── telemetry_schema.py     # Pydantic validation for incoming/outgoing JSON structure
+│   │   ├── services/
+│   │   │   └── data_processor.py       # Middle-tier logic for complex queries or aggregations
+│   │   └── main.py                     # Bootstraps the app, mounts routers, configures CORS
+│   ├── requirements.txt                # Python dependencies
+│   └── Dockerfile                      # Container for the Uvicorn/FastAPI server
+│
+├── frontend/                           # React + TypeScript: Interactive orbital dashboard
+│   ├── src/
+│   │   ├── assets/                     # Static images, icons, or 3D globe textures
+│   │   ├── components/                 # Reusable UI widgets
+│   │   │   ├── OrbitalMap.tsx          # 3D globe plotting live lat/lon coordinates
+│   │   │   ├── LiveMetrics.tsx         # Real-time HUD for velocity, altitude, and signal strength
+│   │   │   └── TelemetryChart.tsx      # Time-series graphs combining historical and live data
+│   │   ├── hooks/
+│   │   │   └── useTelemetryStream.ts   # Manages WebSocket connection and state updates
+│   │   ├── pages/
+│   │   │   └── Dashboard.tsx           # Main layout grid integrating all components
+│   │   ├── services/
+│   │   │   └── api.ts                  # Axios/Fetch client for REST queries
+│   │   ├── App.tsx                     # Main application wrapper and theme provider
+│   │   └── index.tsx                   # React DOM render entry
+│   ├── package.json                    # Node dependencies and build scripts
+│   ├── tsconfig.json                   # TypeScript compiler configuration
+│   └── Dockerfile                      # Multi-stage build serving React static files via Nginx
+│
+├── k8s/                                # Kubernetes manifests for production orchestration
+│   ├── ingestion.yaml                  # Deployment scaling the Go listener pods
+│   ├── backend.yaml                    # Deployment scaling the FastAPI pods
+│   ├── frontend.yaml                   # Deployment scaling the Nginx/React pods
+│   ├── timescaledb.yaml                # StatefulSet for time-series telemetry storage
+│   ├── redis.yaml                      # Deployment for the live message broker
+│   └── ingress.yaml                    # Nginx/Traefik routing: `/api` to backend, `/` to frontend
+│
+├── docker-compose.yml                  # Local dev environment spinning up all services/databases
+├── Makefile                            # Shortcuts (e.g., `make up`, `make build-go`, `make test`)
+├── .gitignore                          # Standard ignores (node_modules, __pycache__, .env, etc.)
+└── README.md                           # Project documentation and setup instructions
