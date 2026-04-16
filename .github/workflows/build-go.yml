@@ -1,0 +1,48 @@
+name: Build & Test Go Ingestion
+
+on:
+  push:
+    paths:
+      - "ingestion/**"
+      - ".github/workflows/build-go.yml"
+  pull_request:
+    paths:
+      - "ingestion/**"
+      - ".github/workflows/build-go.yml"
+
+jobs:
+  test-and-build:
+    name: Test and Build Go binary
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ingestion
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.21"
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run go vet
+        run: go vet ./...
+
+      - name: Run tests
+        run: go test ./... -v -race -coverprofile=coverage.out
+
+      - name: Build binary
+        run: CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o ingestion-server ./cmd/server
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-coverage
+          path: ingestion/coverage.out
