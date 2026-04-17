@@ -45,7 +45,7 @@ The ground station is divided into three primary, decoupled microservices:
 2. **Deploy Locally via Docker Compose:**
    The included `docker-compose.yml` spins up all required services, including the backend, frontend, Redis broker, and TimescaleDB.
    ```bash
-   make up # Or explicitly: docker-compose up --build -d
+   make up # Or explicitly: docker compose up --build -d
    ```
 
 3. **Deploy via Kubernetes:**
