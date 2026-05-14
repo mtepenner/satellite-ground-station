@@ -8,7 +8,7 @@ up:
 
 # Tear down all containers and volumes
 down:
-	docker-compose down -v
+	docker compose down -v
 
 # Show live logs for all services
 logs:
